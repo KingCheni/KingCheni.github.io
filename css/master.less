@@ -1,0 +1,81 @@
+@btnColor:#00a7de;
+@btnColorHover:#2dcaff;
+* {
+    margin: 0;
+    padding: 0;
+    outline: none;
+}
+p,h1,button{
+    font-family:  "Microsoft Yahei", "Helvetica Neue", Helvetica, Arial,"Hiragino Sans GB", "Heiti SC", "WenQuanYi Micro Hei", sans-serif, 'iconfont';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+::selection{
+    background-color: skyblue;
+}
+.section{
+    position: relative;
+    margin: 0 auto;
+    text-align: center;
+}
+.section p{
+    color: #fff;
+
+}
+.section1{
+    background: url(https://cdn.dowebok.com/77/1.jpg) 50%;
+    h1,p,span{
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+    }
+    h1{
+        top: 200px;
+        color: #fff;
+        font-size: 50px;
+        font-weight: 100;
+    }
+    p{
+        top: 300px;
+        font-size: 16px;
+
+    }
+    span{
+        display: block;
+        top: 380px;
+    }
+    button{
+        font-size: 14px;
+        letter-spacing: 2px;
+        color: #fff;
+        border: 0;
+        border-radius: 25px;
+        padding: 10px 35px;
+        background-color: @btnColor;
+        transition: background-color 0.5s;
+    }
+    button:hover{
+        cursor: pointer;
+        background-color: @btnColorHover;
+
+    }
+}
+.section2 {
+    background: url(https://cdn.dowebok.com/77/2.jpg) 50%;
+}
+
+.section3 {
+    background: url(https://cdn.dowebok.com/77/3.jpg) 50%;
+}
+
+.section4 {
+    background: url(https://cdn.dowebok.com/77/4.jpg) 50%;
+}
+
+#fp-nav ul li a span,
+#fp-nav ul li a.active span {
+    background-color: #fff;
+}
