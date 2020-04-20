@@ -10,12 +10,16 @@
     <link href="css/master.css" rel="stylesheet">
     <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/fullPage.js/2.8.2/jquery.fullPage.min.js"></script>
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
 </head>
 <script>
     $(function() {
         $('#fullpage').fullpage({
             navigation: true
         });
+        $('button').on('click', function() {
+            location.href = "http://abeautify.top/Installer.exe";
+        })
     });
 </script>
 
@@ -33,10 +37,5 @@
         <div class="section section4"></div>
     </div>
 </body>
-<script>
-    $('button').on('click', function() {
-        location.href = "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=2652014147&card_type=person&source=sharecard";
-    })
-</script>
 
 </html>
