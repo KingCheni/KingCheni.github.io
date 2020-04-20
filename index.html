@@ -26,7 +26,7 @@
             <h1>Adobe Beautify</h1>
             <p>—— 从现在开始，改变你的世界 ——</p>
             <span>
-                <button type="button" @click="Download">下载软件</button>
+                <button type="button" @click="download">下载软件</button>
             </span>
         </div>
         <div class="section section2"></div>
@@ -41,7 +41,7 @@
             link: 'http://abeautify.top/Installer.exe'
         },
         methods: {
-            Download: function() {
+            download: function() {
                 location.href = this.link;
             }
         }
