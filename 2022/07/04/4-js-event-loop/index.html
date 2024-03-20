@@ -1,0 +1,855 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/logo.png">
+  <link rel="icon" href="/images/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="KingChen">
+  <meta name="keywords" content="Coding Reading Gaming">
+  
+    <meta name="description" content="浏览器中的EventLoop 众所周知， JS 是单线程运行的，在代码执行时，通过将不同函数的执行上下文压入执行栈中来保证代码的有序执行。在执行 同步代码 时，如果遇到 异步事件，JS 引擎并不会一直等待其返回结果，而是会将这个事件挂起，继续执行执行栈中的其他任务。当 异步事件 执行完毕后，再将 异步事件 对应的回调加入到一个任务队列中等待执行。该异步任务队列可以分为 宏任务队列 和 微任务队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Node与浏览器中EventLoop有什么区别">
+<meta property="og:url" content="https://toflying.com/2022/07/04/4-js-event-loop/index.html">
+<meta property="og:site_name" content="ToFlying">
+<meta property="og:description" content="浏览器中的EventLoop 众所周知， JS 是单线程运行的，在代码执行时，通过将不同函数的执行上下文压入执行栈中来保证代码的有序执行。在执行 同步代码 时，如果遇到 异步事件，JS 引擎并不会一直等待其返回结果，而是会将这个事件挂起，继续执行执行栈中的其他任务。当 异步事件 执行完毕后，再将 异步事件 对应的回调加入到一个任务队列中等待执行。该异步任务队列可以分为 宏任务队列 和 微任务队列">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.origin-tec.com/img/1c8134ecd3369664eac94b0e63eaeabf@519x295.png">
+<meta property="article:published_time" content="2022-07-04T08:19:48.000Z">
+<meta property="article:modified_time" content="2022-07-04T08:19:48.000Z">
+<meta property="article:author" content="KingChen">
+<meta property="article:tag" content="前端">
+<meta property="article:tag" content="浏览器">
+<meta property="article:tag" content="Node">
+<meta property="article:tag" content="EventLoop">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://image.origin-tec.com/img/1c8134ecd3369664eac94b0e63eaeabf@519x295.png">
+  
+  
+  
+  <title>Node与浏览器中EventLoop有什么区别 - ToFlying</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/styles/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"toflying.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":["home","post"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":false,"baidu":"163ac7ffdba07f123f259b59185bb87c","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"IoGMmKPIPfqshYURpHnX8kwe-gzGzoHsz","app_key":"CGbs7Jd3uNkg5DUNMFFxbLH7","server_url":"https://iogmmkpi.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?163ac7ffdba07f123f259b59185bb87c";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>ToFlying</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://cdn.abeautify.top/images/common/banner.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Node与浏览器中EventLoop有什么区别"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-04 16:19" pubdate>
+          2022年7月4日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Node与浏览器中EventLoop有什么区别</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="浏览器中的EventLoop"><a href="#浏览器中的EventLoop" class="headerlink" title="浏览器中的EventLoop"></a>浏览器中的EventLoop</h2><blockquote>
+<p>众所周知， <code>JS</code> 是单线程运行的，在代码执行时，通过将不同函数的执行上下文压入执行栈中来保证代码的有序执行。在执行 <code>同步代码</code> 时，如果遇到 <code>异步事件</code>，<code>JS</code> 引擎并不会一直等待其返回结果，而是会将这个事件挂起，继续执行执行栈中的其他任务。当 <code>异步事件</code> 执行完毕后，再将 <code>异步事件</code> 对应的回调加入到一个任务队列中等待执行。该异步任务队列可以分为 <code>宏任务队列</code> 和 <code>微任务队列</code> ，当当前执行栈中的事件执行完毕后，<code>JS</code> 引擎首先会判断<code>微任务队列</code>中是否有任务可以执行，如果有就将<code>微任务队首</code>的事件压入栈中执行。当<code>微任务队列</code>中的任务都执行完成后再去执行<code>宏任务队列</code>中的任务。</p>
+</blockquote>
+<p><img src="https://image.origin-tec.com/img/62fb0ea6cfeaef749c59f6626a69f9c5@1053x424.png" srcset="/img/loading.gif" lazyload alt="EventLoop"></p>
+<p><strong>Event Loop 执行顺序如下所示：</strong></p>
+<ul>
+<li>整体script代码进入执行栈执行，依次执行所有同步代码。</li>
+<li>然后开始执行异步代码，将遇到的异步代码分为<strong>宏任务</strong>(macro-task)、<strong>微任务</strong>(micro-stak)，各自产生的回调分别放入各自的队列（宏任务队列微任务队列是不同的队列）。</li>
+<li>此时等待主线执行栈执行同步代码结束后，开始依次执行微任务队列中代码直到微任务队列为空，再执行宏任务队列中下一个宏任务，依次循环。</li>
+</ul>
+<p class="note note-warning">注意：宏任务、微任务中又可能包括宏、微任务，仍然按照以上规则处理，顺序不能乱。</p>
+
+<h3 id="宏任务与微任务"><a href="#宏任务与微任务" class="headerlink" title="宏任务与微任务"></a>宏任务与微任务</h3><h4 id="宏任务"><a href="#宏任务" class="headerlink" title="宏任务"></a>宏任务</h4><table>
+<thead>
+<tr>
+<th>#</th>
+<th align="center">浏览器</th>
+<th align="center">Node</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>I&#x2F;O</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>setTimeout</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>setInterval</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>setImmediate</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>requestAnimationFrame</td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+</tr>
+</tbody></table>
+<h4 id="微任务"><a href="#微任务" class="headerlink" title="微任务"></a>微任务</h4><table>
+<thead>
+<tr>
+<th>#</th>
+<th align="center">浏览器</th>
+<th align="center">Node</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>process.nextTick</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>MutationObserver</td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td>Promise.then catch finally</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+</tbody></table>
+<h3 id="async-x2F-await"><a href="#async-x2F-await" class="headerlink" title="async&#x2F;await"></a>async&#x2F;await</h3><h4 id="async"><a href="#async" class="headerlink" title="async"></a>async</h4><p>当我们在函数前使用 <code>async</code> 的时候，使得该函数返回的是一个 <code>Promise</code> 对象</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">test</span>(<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>   <span class="hljs-comment">// async的函数会在这里帮我们隐式使用Promise.resolve(1)</span><br>&#125;<br><span class="hljs-comment">// 等价于下面的代码</span><br><span class="hljs-keyword">function</span> <span class="hljs-title function_">test</span>(<span class="hljs-params"></span>) &#123;<br>   <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params">resolve, reject</span>) &#123;<br>       <span class="hljs-title function_">resolve</span>(<span class="hljs-number">1</span>)<br>   &#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可见 <code>async</code> 只是一个语法糖，只是帮助我们返回一个 <code>Promise</code> 而已</p>
+<h4 id="await"><a href="#await" class="headerlink" title="await"></a>await</h4><p><code>await</code> 表示等待，是右侧「表达式」的结果，这个表达式的计算结果可以是 <code>Promise</code> 对象的值或者一个函数的值（换句话说，就是没有特殊限定）。并且只能在带有 <code>async</code> 的内部使用</p>
+<p>使用 <code>await</code> 时，会从右往左执行，当遇到 <code>await</code> 时，会阻塞函数内部处于它后面的代码，去执行该函数外部的同步代码，当外部同步代码执行完毕，再回到该函数内部执行剩余的代码, 并且当 <code>await</code> 执行完毕之后，<strong>会先处理微任务队列的代码</strong>。</p>
+<p>下面来看一个栗子:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">async1</span>(<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;async1 start&#x27;</span>)<br>    <span class="hljs-keyword">await</span> <span class="hljs-title function_">async2</span>()<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;async1 end&#x27;</span>)<br>&#125;<br><span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">async2</span>(<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;async2&#x27;</span>)<br>&#125;<br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;script start&#x27;</span>)<br><span class="hljs-built_in">setTimeout</span>( <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;setTimeout&#x27;</span>)<br>&#125;, <span class="hljs-number">0</span> )<br><span class="hljs-title function_">async1</span>();<br><span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>( <span class="hljs-keyword">function</span> (<span class="hljs-params"> resolve </span>) &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;promise1&#x27;</span>)<br>    <span class="hljs-title function_">resolve</span>();<br>&#125; ).<span class="hljs-title function_">then</span>( <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;promise2&#x27;</span>)<br>&#125; )<br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;script end&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用事件循环机制分析:</strong></p>
+<ul>
+<li>首先执行同步代码，执行<code>console.log(&#39;script start&#39;)</code></li>
+<li>遇到 <code>setTimeout</code> ，会被推入宏任务队列</li>
+<li>执行 <code>async1()</code>， 它也是同步的，只是返回值是<code>Promise</code>，在内部首先执行<code>console.log(&#39;async1 start&#39;)</code></li>
+<li>然后执行<code>async2()</code>， 然后会打印 <code>console.log(&#39;async2&#39;)</code></li>
+<li>从右到左会执行， 当遇到<code>await</code>的时候，阻塞后面的代码，会将<code>console.log(&#39;async1 end&#39;)</code>放入微任务队列中，然后去外部执行同步代码</li>
+<li>进入 <code>new Promise</code>，打印 <code>console.log(&#39;promise1&#39;)</code></li>
+<li>将<code>.then</code>放入事件循环的微任务队列</li>
+<li>继续执行，打印<code>console.log(&#39;script end&#39;)</code></li>
+<li>外部同步代码执行完毕，接着回到<code>async1()</code>内部， 由于<code>async2()</code>其实是返回一个<code>Promise</code>， <code>await - async2()</code>相当于获取它的值，其实就相当于这段代码<code>Promise.resolve(undefined).then((undefined) =&gt; &#123;&#125;)</code>，所以<code>.then</code>会被推入微任务队列。接下来处理微任务队列，依次打印<code>async1 end</code>和<code>promise2</code>，后面一个<code>.then</code>不会有任何打印，但是会执行</li>
+<li>进入第二次事件循环，执行宏任务队列， 打印<code>console.log(&#39;setTimeout&#39;)</code></li>
+</ul>
+<p>浏览器中的执行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs TEXT">script start<br>async1 start<br>async2<br>promise1<br>script end<br>async1 end<br>promise2<br>undefined<br>setTimeout<br></code></pre></td></tr></table></figure>
+
+<h2 id="Node-中的-EventLoop"><a href="#Node-中的-EventLoop" class="headerlink" title="Node 中的 EventLoop"></a>Node 中的 EventLoop</h2><blockquote>
+<p><code>Node</code> 中的 EventLoop 和浏览器中的是完全不相同的东西。<br><code>Node</code> 的 EventLoop 分为 <strong>6</strong> 个阶段，它们会按照顺序反复运行。每当进入某一个阶段的时候，都会从对应的回调队列中取出函数去执行。当队列为空或者执行的回调函数数量到达系统设定的阈值，就会进入下一阶段。</p>
+</blockquote>
+<ol>
+<li><strong>Timers（计时器阶段）</strong>：初次进入事件循环，会从计时器阶段开始。此阶段会判断是否存在过期的计时器回调（包含 <code>setTimeout</code> 和 <code>setInterval</code> ），如果存在则会执行所有过期的计时器回调，执行完毕后，如果回调中触发了相应的微任务，会接着执行所有微任务，执行完微任务后再进入 Pending callbacks 阶段。</li>
+<li><strong>Pending callbacks</strong>：执行推迟到下一个循环迭代的I &#x2F; O回调（系统调用相关的回调）。</li>
+<li><strong>Idle&#x2F;Prepare</strong>：仅供内部使用。</li>
+<li><strong>Poll（轮询阶段）</strong>：<ul>
+<li>当回调队列不为空时：会执行回调，若回调中触发了相应的微任务，这里的微任务执行时机和其他地方有所不同，不会等到所有回调执行完毕后才执行，而是针对每一个回调执行完毕后，就执行相应微任务。执行完所有的回调后，变为下面的情况。</li>
+<li>当回调队列为空时（没有回调或所有回调执行完毕）：但如果存在有计时器（ <code>setTimeout</code> 、 <code>setInterval</code> 和 <code>setImmediate</code> ）没有执行，会结束轮询阶段，进入 Check 阶段。否则会阻塞并等待任何正在执行的I&#x2F;O操作完成，并马上执行相应的回调，直到所有回调执行完毕。</li>
+</ul>
+</li>
+<li><strong>Check（查询阶段）</strong>：会检查是否存在 <code>setImmediate</code> 相关的回调，如果存在则执行所有回调，执行完毕后，如果回调中触发了相应的微任务，会接着执行所有微任务，执行完微任务后再进入 Close callbacks 阶段。</li>
+<li><strong>Close callbacks</strong>：执行一些关闭回调，比如socket.on(‘close’, …)等。</li>
+</ol>
+<h3 id="setTimeout-和-setImmediate"><a href="#setTimeout-和-setImmediate" class="headerlink" title="setTimeout 和 setImmediate"></a>setTimeout 和 setImmediate</h3><p>二者非常相似，区别主要在于调用时机不同。</p>
+<ul>
+<li><code>setImmediate</code> 设计在 poll 阶段完成时执行，即 check 阶段；</li>
+<li><code>setTimeout</code> 设计在 poll 阶段为空闲时，且设定时间到达后执行，但它在 timer 阶段执行</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;setTimeout&#x27;</span>)<br>&#125;, <span class="hljs-number">0</span>)<br><span class="hljs-title function_">setImmediate</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;setImmediate&#x27;</span>)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p>对于以上代码来说，<code>setTimeout</code> 可能执行在前，也可能执行在后</p>
+<ul>
+<li>首先 <code>setTimeout(fn, 0) === setTimeout(fn, 1)</code>，这是由源码决定的</li>
+<li>进入事件循环也是需要成本的，如果在准备时候花费了大于 1ms 的时间，那么在 timer 阶段就会直接执行 <code>setTimeout</code> 回调</li>
+<li>那么如果准备时间花费小于 1ms，那么就是 <code>setImmediate</code> 回调先执行了</li>
+</ul>
+<p>当然在某些情况下，他们的执行顺序一定是固定的，比如以下代码：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;fs&#x27;</span>)<br>fs.<span class="hljs-title function_">readFile</span>(__filename, <span class="hljs-function">() =&gt;</span> &#123;<br>    <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;timeout&#x27;</span>);<br>    &#125;, <span class="hljs-number">0</span>)<br>    <span class="hljs-title function_">setImmediate</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;immediate&#x27;</span>)<br>    &#125;)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p>在上述代码中，<code>setImmediate</code> 永远先执行。因为两个代码写在 IO 回调中，IO 回调是在 poll 阶段执行，当回调执行完毕后队列为空，发现存在 <code>setImmediate</code> 回调，所以就直接跳转到 check 阶段去执行回调了。</p>
+<p>上面都是 宏任务 的执行情况，对于 微任务 来说，它会在以上每个阶段完成前 <strong>清空</strong> 微任务 队列，下图中的 Tick 就代表了 微任务。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;timer&#x27;</span>)<br>&#125;, <span class="hljs-number">0</span>)<br><span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">resolve</span>().<span class="hljs-title function_">then</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) &#123;<br>  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;promise&#x27;</span>)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p>对于以上代码来说，其实和浏览器中的输出是一样的，微任务microtask 永远执行在 宏任务macrotask 前面。</p>
+<h3 id="process-nextTick"><a href="#process-nextTick" class="headerlink" title="process.nextTick"></a>process.nextTick</h3><p>最后来看 Node 中的 <code>process.nextTick</code>，这个函数其实是独立于 EventLoop 之外的，它有一个自己的队列，当每个阶段完成后，如果存在 nextTick 队列，就会清空队列中的所有回调函数，并且优先于其他 微任务microtask 执行。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> &#123;<br> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;timer1&#x27;</span>)<br> <span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">resolve</span>().<span class="hljs-title function_">then</span>(<span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) &#123;<br>   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;promise1&#x27;</span>)<br> &#125;)<br>&#125;, <span class="hljs-number">0</span>)<br>process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =&gt;</span> &#123;<br> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;nextTick&#x27;</span>)<br> process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;nextTick&#x27;</span>)<br>   process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>     <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;nextTick&#x27;</span>)<br>     process.<span class="hljs-title function_">nextTick</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>       <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;nextTick&#x27;</span>)<br>     &#125;)<br>   &#125;)<br> &#125;)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p>对于以上代码，永远都是先把 nextTick 全部打印出来。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><section class="footnotes"><div class="footnote-list"><ol><li><span id="fn:1" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://www.yuque.com/cuggz/interview/browser">前端面试题之浏览器原理篇 - 语雀</a>
+<a href="#fnref:1" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:2" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://www.wangt.cc/2021/09/%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%E3%80%81%E5%90%8C%E6%AD%A5%E5%BC%82%E6%AD%A5%E3%80%81%E5%AE%8F%E4%BB%BB%E5%8A%A1%E5%BE%AE%E4%BB%BB%E5%8A%A1/">事件循环、同步异步、宏任务微任务 - 程序员灯塔</a>
+<a href="#fnref:2" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:3" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000017554062">js事件循环机制（浏览器端Event Loop) 以及async&#x2F;await的理解 - 思否</a>
+<a href="#fnref:3" rev="footnote" class="footnote-backref"> ↩</a></span></span></li></ol></div></section>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%89%8D%E7%AB%AF%E6%8A%80%E6%9C%AF/" class="category-chain-item">前端技术</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%89%8D%E7%AB%AF/">#前端</a>
+      
+        <a href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">#浏览器</a>
+      
+        <a href="/tags/Node/">#Node</a>
+      
+        <a href="/tags/EventLoop/">#EventLoop</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Node与浏览器中EventLoop有什么区别</div>
+      <div>https://toflying.com/2022/07/04/4-js-event-loop/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>KingChen</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月4日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/06/5-website-block-iframe/" title="网站如何防止被iframe引用">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">网站如何防止被iframe引用</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/04/3-how-browser-render/" title="浏览器渲染页面的原理">
+                        <span class="hidden-mobile">浏览器渲染页面的原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#gitalk-container', function() {
+      Fluid.utils.createCssLink('/css/gitalk.css')
+      Fluid.utils.createScript('https://cdn.abeautify.top/js/gitalk/gitalk.min.js', function() {
+        var options = Object.assign(
+          {"clientID":"60e0fe4593856338beda","clientSecret":"d79ddc12ba7ac9065151f303f1950d0cc75367b8","repo":"KingCheni.github.io","owner":"KingCheni","admin":["KingCheni"],"language":"zh-CN","labels":["Gitalk"],"perPage":10,"pagerDirection":"last","distractionFreeMode":false,"createIssueManually":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","upload":{"enable":true,"url":"https://pic.abeautify.top/upload.php","method":"POST","name":"file","headers":{"Content-Type":"multipart/form-data"},"responseType":"json","timeout":100000,"fileMaxSize":10485760,"successCode":1,"successCodeKey":["code"],"errorMsgKey":["state"],"successUrlKey":["url"],"proxy":null}},
+          {
+            id: '60e5fb63437c400aeb56acc121fe0e8e'
+          }
+        )
+        var gitalk = new Gitalk(options);
+        gitalk.render('gitalk-container');
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       Powered by <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> & <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,866 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/logo.png">
+  <link rel="icon" href="/images/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="KingChen">
+  <meta name="keywords" content="Coding Reading Gaming">
+  
+    <meta name="description" content="Proxy 对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、枚举、函数调用等）。其实通俗来讲，Proxy 相当于在原生方法（例如 get 访问Object的中的属性或方法、set 修改Object中的属性或方法、has 拦截”in操作符判断属性或方法是否存在Object或其原型链上”等等）之上的一层捕获器，可以进行拦截、修改等多种操作。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈 ES6 中的 Proxy 用法">
+<meta property="og:url" content="https://toflying.com/2022/07/08/6-talk-about-es6-proxy/index.html">
+<meta property="og:site_name" content="ToFlying">
+<meta property="og:description" content="Proxy 对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、枚举、函数调用等）。其实通俗来讲，Proxy 相当于在原生方法（例如 get 访问Object的中的属性或方法、set 修改Object中的属性或方法、has 拦截”in操作符判断属性或方法是否存在Object或其原型链上”等等）之上的一层捕获器，可以进行拦截、修改等多种操作。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.origin-tec.com/img/104af435a5ab8d0aed5be1d936df33fc@285x177.png">
+<meta property="article:published_time" content="2022-07-08T03:26:17.000Z">
+<meta property="article:modified_time" content="2022-07-08T06:26:00.000Z">
+<meta property="article:author" content="KingChen">
+<meta property="article:tag" content="前端">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="ES6">
+<meta property="article:tag" content="Proxy">
+<meta property="article:tag" content="Object">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://image.origin-tec.com/img/104af435a5ab8d0aed5be1d936df33fc@285x177.png">
+  
+  
+  
+  <title>浅谈 ES6 中的 Proxy 用法 - ToFlying</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/styles/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"toflying.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":["home","post"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":false,"baidu":"163ac7ffdba07f123f259b59185bb87c","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"IoGMmKPIPfqshYURpHnX8kwe-gzGzoHsz","app_key":"CGbs7Jd3uNkg5DUNMFFxbLH7","server_url":"https://iogmmkpi.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?163ac7ffdba07f123f259b59185bb87c";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>ToFlying</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://cdn.abeautify.top/images/common/banner.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="浅谈 ES6 中的 Proxy 用法"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-08 11:26" pubdate>
+          2022年7月8日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          42 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">浅谈 ES6 中的 Proxy 用法</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：2022年7月8日 下午
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <div class="note note-warning">
+            <p class="title title-warning">WARNING</p><p>此处 <code>Proxy</code> 指的是ES6中的语法，而非 <a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Mozilla/Add-ons/WebExtensions/API/proxy">FireFox proxy</a> 与 <a target="_blank" rel="noopener" href="https://developer.chrome.com/docs/extensions/reference/proxy/">Chrome proxy</a> WebExtensions。请注意，前者是标准语法，P大写；而后者是对应厂商的私有技术，p小写。</p>
+          </div>
+
+<h2 id="Proxy-介绍"><a href="#Proxy-介绍" class="headerlink" title="Proxy 介绍"></a>Proxy 介绍</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy">MDN</a> 中的描述：<code>Proxy</code> 对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、枚举、函数调用等）。其实通俗来讲，<code>Proxy</code> 相当于在原生方法（例如 <code>get</code> 访问Object的中的属性或方法、<code>set</code> 修改Object中的属性或方法、<code>has</code> 拦截”in操作符判断属性或方法是否存在Object或其原型链上”等等）之上的一层捕获器，可以进行拦截、修改等多种操作。<br><code>Proxy</code> 常见用法有很多，包括 <a target="_blank" rel="noopener" href="https://hackernoon.com/introducing-javascript-es6-proxies-1327419ab413">运算符重载</a>，<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Mock_object">对象模拟</a>，<a target="_blank" rel="noopener" href="https://medium.com/dailyjs/how-to-use-javascript-proxies-for-fun-and-profit-365579d4a9f8">简洁而灵活的API创建</a>，<a target="_blank" rel="noopener" href="https://github.com/sindresorhus/on-change">对象更改事件</a> 等等。<br>又比如在 <a target="_blank" rel="noopener" href="https://cn.vuejs.org/">Vue2</a> 中是通过 <code>Object.defineProperty()</code> 来劫持各个属性的<code>setter</code>、<code>getter</code> 来实现的双向绑定，而在 <a target="_blank" rel="noopener" href="https://v3.cn.vuejs.org/">Vue3</a> 中使用的正是 <code>Proxy</code> 来实现的双向绑定。</p>
+</blockquote>
+<div class="note note-info">
+            <p><code>Proxy</code> 用于修改某些操作的默认行为，也可以理解为在目标对象之前架设一层拦截，外部所有的访问都必须先通过这层拦截，因此提供了一种机制，可以对外部的访问进行过滤和修改。这个词的原理为代理，在这里可以表示由它来“代理”某些操作，译为“代理器”。</p>
+          </div>
+
+<h3 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h3><ul>
+<li><code>handler</code> 包含捕捉器（trap）的占位符对象，可译为处理器对象。</li>
+<li><code>traps</code> 提供属性访问的方法。这类似于操作系统中捕获器的概念。 </li>
+<li><code>target</code> 被 <code>Proxy</code> 代理虚拟化的对象。它常被作为代理的存储后端。根据目标验证关于对象不可扩展性或不可配置属性的不变量（保持不变的语义）。</li>
+</ul>
+<h3 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h3><blockquote>
+<p>ES6 原生提供了 <code>Proxy</code> 构造函数，用来生成 <code>Proxy</code> 实例。</p>
+</blockquote>
+<ul>
+<li><code>target</code> 要使用 Proxy 包装的 <strong>目标对象</strong> <code>Object</code>（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）。</li>
+<li><code>handler</code> 一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时代理的行为。</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">var</span> proxy = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(target, handler);<br></code></pre></td></tr></table></figure>
+
+<div class="note note-warning">
+            <p><strong>注意：</strong> <code>target</code> 必须是 <code>Object</code> 类型，而不能是其他类型。</p>
+          </div>
+
+<p><code>Proxy</code> 对象的所有用法，都是上面的这种形式。不同的只是 <code>handler</code> 参数的写法。其中 <code>new Proxy</code> 用来生成 <code>Proxy</code> 实例，<code>target</code> 是表示所要拦截的对象(Object)，<code>handler</code> 是用来定制拦截行为的对象。</p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>下面是 <code>Proxy</code> 最简单的例子是，这是一个有捕捉器的代理，一个 <code>get</code> 捕捉器，总是返回 <code>42</code>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">let</span> target = &#123;<br>  <span class="hljs-attr">x</span>: <span class="hljs-number">10</span>,<br>  <span class="hljs-attr">y</span>: <span class="hljs-number">20</span><br>&#125;<br><br><span class="hljs-keyword">let</span> handler = &#123;<br>  <span class="hljs-attr">get</span>: <span class="hljs-function">(<span class="hljs-params">obj, prop</span>) =&gt;</span> <span class="hljs-number">42</span><br>&#125;<br><br>target = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(target, handler)<br><br>target.<span class="hljs-property">x</span> <span class="hljs-comment">// 42</span><br>target.<span class="hljs-property">y</span> <span class="hljs-comment">// 42</span><br>target.<span class="hljs-property">x</span> <span class="hljs-comment">// 42</span><br></code></pre></td></tr></table></figure>
+
+<p>结果是一个对象将为任何属性访问操作都返回“42”。 这包括 <code>target.x</code>，<code>target[&#39;x&#39;]</code>，<code>Reflect.get(target, &#39;x&#39;)</code> 等。</p>
+<h3 id="handler-对象的方法"><a href="#handler-对象的方法" class="headerlink" title="handler 对象的方法"></a>handler 对象的方法</h3><p><code>handler</code> 对象是一个容纳一批特定属性的占位符对象。它包含有 <code>Proxy</code> 的各个捕获器（trap）。</p>
+<p>所有的捕捉器是可选的。如果没有定义某个捕捉器，那么就会保留源对象的默认行为。</p>
+<ul>
+<li><code>getPrototypeOf()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/GetPrototypeOf">Object.getPrototypeOf</a> 方法的捕捉器。</li>
+<li><code>setPrototypeOf()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf">Object.setPrototypeOf</a> 方法的捕捉器。</li>
+<li><code>isExtensible()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible">Object.isExtensible</a> 方法的捕捉器。</li>
+<li><code>preventExtensions()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/preventExtensions">Object.preventExtensions</a> 方法的捕捉器。</li>
+<li><code>getOwnPropertyDescriptor()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor">Object.getOwnPropertyDescriptor</a> 方法的捕捉器。</li>
+<li><code>defineProperty()</code>： <a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">Object.defineProperty</a> 方法的捕捉器。</li>
+<li><code>has()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/in">in</a> 操作符的捕捉器。</li>
+<li><code>get()</code> ：属性读取操作的捕捉器。</li>
+<li><code>set()</code> ：属性设置操作的捕捉器。</li>
+<li><code>deleteProperty()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/delete">delete</a> 操作符的捕捉器。</li>
+<li><code>ownKeys()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames">Object.getOwnPropertyNames</a> 方法和 <a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols">Object.getOwnPropertySymbols</a> 方法的捕捉器。</li>
+<li><code>apply()</code> ：函数调用操作的捕捉器。</li>
+<li><code>construct()</code> ：<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/new">new</a> 操作符的捕捉器。</li>
+</ul>
+<p>此外，一些不标准的捕捉器已经被<a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Deprecated_and_obsolete_features#proxy">废弃并且移除</a>了。</p>
+<h2 id="Proxy-例子"><a href="#Proxy-例子" class="headerlink" title="Proxy 例子"></a>Proxy 例子</h2><h3 id="默认值-x2F-“零值”"><a href="#默认值-x2F-“零值”" class="headerlink" title="默认值&#x2F;“零值”"></a>默认值&#x2F;“零值”</h3><blockquote>
+<p>在 Go 语言中，有零值(nil)的概念，零值是特定于类型的隐式默认结构值。其思想是提供类型安全的默认基元值，或者用gopher的话说，给结构一个有用的零值。</p>
+</blockquote>
+<p>虽然不同的创建模式支持类似的功能，但 Javascript 无法用隐式初始值包装对象。Javascript 中未设置属性的默认值是 <code>undefined</code>。但 <code>Proxy</code> 可以改变这种情况。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> <span class="hljs-title function_">withZeroValue</span> = (<span class="hljs-params">target, zeroValue</span>) =&gt; <br>    <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(target, &#123;<br>        <span class="hljs-attr">get</span>: <span class="hljs-function">(<span class="hljs-params">obj, prop</span>) =&gt;</span> (prop <span class="hljs-keyword">in</span> obj) ? obj[prop] : zeroValue<br>    &#125;)<br></code></pre></td></tr></table></figure>
+
+<p>函数 <code>withZeroValue</code> 用来包装目标对象。 如果设置了属性，则返回属性值。 否则，它返回一个默认的 “零值” 。</p>
+<p>从技术上讲，这种方法也不是隐含的，但如果我们扩展 <code>withZeroValue</code>，以 <code>Boolean (false)</code>, <code>Number (0)</code>, <code>String (&quot;&quot;)</code>, <code>Object (&#123;&#125;)</code>，<code>Array ([])</code>等对应的零值，则可能是隐含的。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">let</span> pos = &#123;<br>  <span class="hljs-attr">x</span>: <span class="hljs-number">4</span>,<br>  <span class="hljs-attr">y</span>: <span class="hljs-number">19</span><br>&#125;<br><br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(pos.<span class="hljs-property">x</span>, pos.<span class="hljs-property">y</span>, pos.<span class="hljs-property">z</span>) <span class="hljs-comment">// 4, 19, undefined</span><br><br>pos = <span class="hljs-title function_">withZeroValue</span>(pos, <span class="hljs-number">0</span>)<br><br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(pos.<span class="hljs-property">z</span>, pos.<span class="hljs-property">y</span>, pos.<span class="hljs-property">z</span>) <span class="hljs-comment">// 4, 19, 0</span><br></code></pre></td></tr></table></figure>
+
+<p>此功能可能有用的一个地方是坐标系。 绘图库可以基于数据的形状自动支持2D和3D渲染。 不是创建两个单独的模型，而是始终将z默认为 0 而不是 <code>undefined</code>，这可能是有意义的。</p>
+<h3 id="负索引数组"><a href="#负索引数组" class="headerlink" title="负索引数组"></a>负索引数组</h3><blockquote>
+<p>在JS中获取数组中的最后一个元素方式通过写的很冗长且重复，也容易出错。 这就是为什么有一个TC39提案定义了一个便利属性 <code>Array.lastItem</code> 来获取和设置最后一个元素。</p>
+</blockquote>
+<p>其他语言，如 Python 和 Ruby，使用负组索引更容易访问最后面的元素。例如，可以简单地使用 <code>arr[-1]</code> 替代 <code>arr[arr.length-1]</code> 访问最后一个元素。</p>
+<p>使用 <code>Proxy</code> 也可以在 Javascript 中使用负索引。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> <span class="hljs-title function_">negativeArray</span> = (<span class="hljs-params">els</span>) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(els, &#123;<br>  <span class="hljs-attr">get</span>: <span class="hljs-function">(<span class="hljs-params">target, property, receiver</span>) =&gt;</span> <br>    <span class="hljs-title class_">Reflect</span>.<span class="hljs-title function_">get</span>(<br>        target,<br>        ( +property &lt; <span class="hljs-number">0</span>) ? <span class="hljs-title class_">String</span>( target.<span class="hljs-property">length</span> + +property ) : property, <br>        receiver<br>    )<br>&#125;);<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>target</code> : 目标对象。</li>
+<li><code>property</code> : 被获取的属性名。</li>
+<li><code>receiver</code> : <code>Proxy</code> 或者继承 <code>Proxy</code> 的对象</li>
+</ul>
+<div class="note note-info">
+            <p><code>Reflect</code> 是一个内置的对象，它提供拦截 JavaScript 操作的方法。这些方法与 <code>Proxy handlers</code> 的方法相同。<code>Reflect</code> 不是一个函数对象，因此它是不可构造的。<br>与大多数全局对象不同 <code>Reflect</code> 并非一个构造函数，所以<strong>不能</strong>通过 <code>new</code> 运算符对其进行调用，或者将 <code>Reflect</code> 对象作为一个函数来调用。<code>Reflect</code> 的所有属性和方法都是静态的（就像 <code>Math</code> 对象）。<br><a style="color: var(--post-link-color);" target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Reflect">点击可查看MDN解释</a></p>
+          </div>
+
+<p>一个重要的注意事项是包含 <code>get</code> 的捕捉器（trap）字符串化所有属性。 对于数组访问，我们需要将属性名称强制转换为 <code>Numbers</code>，这样就可以使用加运算符（隐式转换）简洁地完成。</p>
+<p>现在 <code>arr[-1]</code> 访问最后一个元素，<code>arr[-2]</code> 访问倒数第二个元素，以此类推。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> arr = <span class="hljs-title function_">negativeArray</span>([<span class="hljs-string">&#x27;🚀&#x27;</span>, <span class="hljs-string">&#x27;📚&#x27;</span>, <span class="hljs-string">&#x27;🌈&#x27;</span>]);<br><br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(arr[-<span class="hljs-number">1</span>]) <span class="hljs-comment">// &#x27;🌈&#x27;</span><br><br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(arr[-<span class="hljs-number">2</span>]) <span class="hljs-comment">// &#x27;📚&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="隐藏属性"><a href="#隐藏属性" class="headerlink" title="隐藏属性"></a>隐藏属性</h3><blockquote>
+<p>众所周知 JS 没有私有属性。 <code>Symbol</code> 最初是为了启用私有属性而引入的，但后来使用像 <code>Object.getOwnPropertySymbols</code> 这样的反射方法进行了淡化，这使得它们可以被公开发现。长期以来的惯例是将私有属性命名为前下划线 <code>_</code> ，有效地标记它们“不要访问”。<code>Proxy</code> 提供了一种稍微更好的方法来屏蔽这些属性。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> <span class="hljs-title function_">hide</span> = (<span class="hljs-params">target, prefix = <span class="hljs-string">&#x27;_&#x27;</span></span>) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(target, &#123;<br>  <span class="hljs-attr">has</span>: <span class="hljs-function">(<span class="hljs-params">obj, prop</span>) =&gt;</span> (!prop.<span class="hljs-title function_">startsWith</span>(prefix) &amp;&amp; prop <span class="hljs-keyword">in</span> obj),<br>  <span class="hljs-attr">ownKeys</span>: <span class="hljs-function">(<span class="hljs-params">obj</span>) =&gt;</span> <span class="hljs-title class_">Reflect</span>.<span class="hljs-title function_">ownKeys</span>(obj)<br>    .<span class="hljs-title function_">filter</span>(<span class="hljs-function"><span class="hljs-params">prop</span> =&gt;</span> (<span class="hljs-keyword">typeof</span> prop !== <span class="hljs-string">&quot;string&quot;</span> || !prop.<span class="hljs-title function_">startsWith</span>(prefix))),<br>  <span class="hljs-attr">get</span>: <span class="hljs-function">(<span class="hljs-params">obj, prop, rec</span>) =&gt;</span> (prop <span class="hljs-keyword">in</span> rec) ? obj[prop] : <span class="hljs-literal">undefined</span><br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p><code>hide</code> 函数包装目标对象，并使得从 <code>in</code> 运算符和 <code>Object.getOwnPropertyNames</code> 等方法无法访问带有下划线的属性。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">let</span> userData = <span class="hljs-title function_">hide</span>(&#123;<br>  <span class="hljs-attr">firstName</span>: <span class="hljs-string">&#x27;Tom&#x27;</span>,<br>  <span class="hljs-attr">mediumHandle</span>: <span class="hljs-string">&#x27;@tbarrasso&#x27;</span>,<br>  <span class="hljs-attr">_favoriteRapper</span>: <span class="hljs-string">&#x27;Drake&#x27;</span><br>&#125;)<br><br>userData.<span class="hljs-property">_favoriteRapper</span>        <span class="hljs-comment">// undefined</span><br>(<span class="hljs-string">&#x27;_favoriteRapper&#x27;</span> <span class="hljs-keyword">in</span> userData) <span class="hljs-comment">// false</span><br></code></pre></td></tr></table></figure>
+<p>更完整的实现还包括诸如 <code>deleteProperty</code> 和 <code>defineProperty</code> 之类的捕捉器。 除了闭包之外，这可能是最接近真正私有属性的方法，因为它们无法通过枚举，克隆，访问或修改来访问。</p>
+<h3 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h3><p>在客户端和服务器之间同步状态时遇到困难并不罕见。数据可能会随着时间的推移而发生变化，很难确切地知道何时重新同步的逻辑。</p>
+<p><code>Proxy</code> 启用了一种新方法：根据需要将对象包装为无效（和重新同步）属性。 所有访问属性的尝试都首先检查缓存策略，该策略决定返回当前在内存中的内容还是采取其他一些操作。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> <span class="hljs-title function_">ephemeral</span> = (<span class="hljs-params">target, ttl = <span class="hljs-number">60</span></span>) =&gt; &#123;<br>  <span class="hljs-keyword">const</span> <span class="hljs-variable constant_">CREATED_AT</span> = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>()<br>  <span class="hljs-keyword">const</span> <span class="hljs-title function_">isExpired</span> = (<span class="hljs-params"></span>) =&gt; (<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-variable constant_">CREATED_AT</span>) &gt; (ttl * <span class="hljs-number">1000</span>)<br>  <br>  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(target, &#123;<br>    <span class="hljs-attr">get</span>: <span class="hljs-function">(<span class="hljs-params">obj, prop</span>) =&gt;</span> <span class="hljs-title function_">isExpired</span>() ? <span class="hljs-literal">undefined</span> : <span class="hljs-title class_">Reflect</span>.<span class="hljs-title function_">get</span>(obj, prop)<br>  &#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这个函数过于简化了: 它使对象上的所有属性在一段时间后都无法访问。然而，将此方法扩展为根据每个属性设置生存时间(TTL)，并在一定的持续时间或访问次数之后更新它并不困难。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">let</span> bankAccount = <span class="hljs-title function_">ephemeral</span>(&#123;<br>  <span class="hljs-attr">balance</span>: <span class="hljs-number">14.93</span><br>&#125;, <span class="hljs-number">10</span>)<br><br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(bankAccount.<span class="hljs-property">balance</span>)    <span class="hljs-comment">// 14.93</span><br><br><span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> &#123;<br>  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(bankAccount.<span class="hljs-property">balance</span>)  <span class="hljs-comment">// undefined</span><br>&#125;, <span class="hljs-number">10</span> * <span class="hljs-number">1000</span>)<br></code></pre></td></tr></table></figure>
+
+<p>这个示例简单地使银行帐户余额在10秒后无法访问。</p>
+<h3 id="运算符重载"><a href="#运算符重载" class="headerlink" title="运算符重载"></a>运算符重载</h3><p>也许从语法上讲，最吸引人的 <code>Proxy</code> 用例是重载操作符的能力，比如使用 <code>handler.has</code> 的 <code>in</code> 操作符。</p>
+<p><code>in</code> 操作符用于检查指定的属性是否位于指定的对象或其原型链中。但它也是语法上最优雅的重载操作符。这个例子定义了一个连续range函数来比较数字。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> <span class="hljs-title function_">range</span> = (<span class="hljs-params">min, max</span>) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-title class_">Proxy</span>(<span class="hljs-title class_">Object</span>.<span class="hljs-title function_">create</span>(<span class="hljs-literal">null</span>), &#123;<br>  <span class="hljs-attr">has</span>: <span class="hljs-function">(<span class="hljs-params">_, prop</span>) =&gt;</span> (+prop &gt;= min &amp;&amp; +prop &lt;= max)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p>与Python不同，Python使用生成器与有限的整数序列进行比较，这种方法支持十进制比较，可以扩展为支持其他数值范围。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs js"><span class="hljs-keyword">const</span> X = <span class="hljs-number">10.5</span><br><span class="hljs-keyword">const</span> nums = [<span class="hljs-number">1</span>, <span class="hljs-number">5</span>, X, <span class="hljs-number">50</span>, <span class="hljs-number">100</span>]<br><br><span class="hljs-keyword">if</span> (X <span class="hljs-keyword">in</span> <span class="hljs-title function_">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">100</span>)) &#123; <span class="hljs-comment">// true</span><br>  <span class="hljs-comment">// ...</span><br>&#125;<br><br>nums.<span class="hljs-title function_">filter</span>(<span class="hljs-function"><span class="hljs-params">n</span> =&gt;</span> n <span class="hljs-keyword">in</span> <span class="hljs-title function_">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">10</span>)) <span class="hljs-comment">// [1, 5]</span><br></code></pre></td></tr></table></figure>
+
+<p>尽管这个用例不能解决复杂的问题，但它确实提供了干净、可读和可重用的代码。</p>
+<p>除了 <code>in</code> 运算符，我们还可以重载 <code>delete</code> 和 <code>new</code>。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><strong>为什么要用 Proxy ?</strong></p>
+<p>就拿 Vue 举例来说，在 Vue2 中当一个 Vue 实例创建时，Vue 会遍历 <code>data</code> 中的属性，用 <code>Object.defineProperty</code> 将它们转为 <code>getter/setter</code>，并且在内部追踪相关依赖，在属性被访问和修改时通知变化。 每个组件实例都有相应的 <code>watcher</code> 程序实例，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的 <code>setter</code> 被调用时，会通知 <code>watcher</code> 重新计算，从而致使它关联的组件得以更新。</p>
+<p>而这样一个个遍历对 <code>data</code> 进行修改显然是不高效的，所以在 Vue3 中使用了 Proxy 来进行数据劫持。</p>
+<p>Vue3 使用 Proxy 来监控数据的变化。就本文以上所说，Proxy 是 ES6 中提供的功能，其作用为：用于定义基本操作的自定义行为（如属性查找，赋值，枚举，函数调用等）。相对于 <code>Object.defineProperty()</code>，其有以下特点：</p>
+<ol>
+<li><code>Proxy</code> 直接代理整个对象而非对象属性，这样只需做一层代理就可以监听同级结构下的所有属性变化，包括新增属性和删除属性。</li>
+<li><code>Proxy</code> 可以监听数组的变化。(在 Vue2 中是重写了数组中的各种方法才达到监听的目的，如 <code>push</code>、<code>pop</code>、<code>shift</code>、<code>unshift</code>、<code>splice</code>、<code>sort</code>、<code>reverse</code> 等)</li>
+</ol>
+<p>在 Vue2 中，<code>Object.defineProperty</code> 会改变原始数据，而 <code>Proxy</code> 是创建对象的虚拟表示，并提供 <code>set</code> 、<code>get</code> 和 <code>deleteProperty</code> 等处理器，这些处理器可在访问或修改原始对象上的属性时进行拦截，有以下特点∶</p>
+<ul>
+<li>不需用使用 <code>Vue.$set</code> 或 <code>Vue.$delete</code> 触发响应式。</li>
+<li>全方位的数组变化检测，消除了 Vue2 无效的边界情况。</li>
+<li>支持 <code>Map</code>，<code>Set</code>，<code>WeakMap</code> 和 <code>WeakSet</code>。</li>
+</ul>
+<p>Vue3 中 <code>Proxy</code> 实现的响应式原理与 Vue2 的实现原理相同，实现方式大同小异∶ </p>
+<ul>
+<li><code>get</code> 收集依赖；</li>
+<li><code>set</code>、<code>delete</code> 等触发依赖；</li>
+<li>对于集合类型，就是对集合对象的方法做一层包装：原方法执行后执行依赖相关的收集或触发逻辑；</li>
+</ul>
+<p><strong>THE END</strong></p>
+<p><code>Proxy</code> 提供虚拟化接口来控制任何目标 <code>Object</code> 的行为。 这样做可以在简单性和实用性之间取得平衡，而不会牺牲兼容性。</p>
+<p>也许使用 <code>Proxy</code> 的最令人信服的理由是，上面的许多示例只有几行，并且可以轻松组合以创建复杂的功能。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><section class="footnotes"><div class="footnote-list"><ol><li><span id="fn:1" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000019725835?utm_source=sf-similar-article">Proxy 的巧用 - 思否</a> 翻译自 <a target="_blank" rel="noopener" href="https://blog.bitsrc.io/a-practical-guide-to-es6-proxy-229079c3c2f0">A practical guide to Javascript Proxy | by Thomas Barrasso | Bits and Pieces</a>
+<a href="#fnref:1" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:2" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy">Proxy - JavaScript | MDN</a>
+<a href="#fnref:2" rev="footnote" class="footnote-backref"> ↩</a></span></span></li></ol></div></section>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%89%8D%E7%AB%AF%E6%8A%80%E6%9C%AF/" class="category-chain-item">前端技术</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%89%8D%E7%AB%AF/">#前端</a>
+      
+        <a href="/tags/JavaScript/">#JavaScript</a>
+      
+        <a href="/tags/ES6/">#ES6</a>
+      
+        <a href="/tags/Proxy/">#Proxy</a>
+      
+        <a href="/tags/Object/">#Object</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>浅谈 ES6 中的 Proxy 用法</div>
+      <div>https://toflying.com/2022/07/08/6-talk-about-es6-proxy/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>KingChen</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月8日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2022年7月8日</div>
+        </div>
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/11/7-share-gitalk/" title="Gitalk：一款根据Github Issues开发的评论插件">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Gitalk：一款根据Github Issues开发的评论插件</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/06/5-website-block-iframe/" title="网站如何防止被iframe引用">
+                        <span class="hidden-mobile">网站如何防止被iframe引用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#gitalk-container', function() {
+      Fluid.utils.createCssLink('/css/gitalk.css')
+      Fluid.utils.createScript('https://cdn.abeautify.top/js/gitalk/gitalk.min.js', function() {
+        var options = Object.assign(
+          {"clientID":"60e0fe4593856338beda","clientSecret":"d79ddc12ba7ac9065151f303f1950d0cc75367b8","repo":"KingCheni.github.io","owner":"KingCheni","admin":["KingCheni"],"language":"zh-CN","labels":["Gitalk"],"perPage":10,"pagerDirection":"last","distractionFreeMode":false,"createIssueManually":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","upload":{"enable":true,"url":"https://pic.abeautify.top/upload.php","method":"POST","name":"file","headers":{"Content-Type":"multipart/form-data"},"responseType":"json","timeout":100000,"fileMaxSize":10485760,"successCode":1,"successCodeKey":["code"],"errorMsgKey":["state"],"successUrlKey":["url"],"proxy":null}},
+          {
+            id: '126844b6d4152efd5e0f619ba5e32d27'
+          }
+        )
+        var gitalk = new Gitalk(options);
+        gitalk.render('gitalk-container');
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       Powered by <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> & <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

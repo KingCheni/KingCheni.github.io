@@ -1,0 +1,69 @@
+@charset "UTF-8";
+@import url(./gitalk.css);
+/* fix gitalk.css style*/
+
+:root {
+    --color-orange: #EB5757;
+    --color-info: #2196F3;
+    --color-success: #27AE60;
+    --color-warn: #d3bf5a;
+    --color-danger: #FF5252;
+    --font-family-apple: "SF Pro SC", "HanHei SC", "SF Pro Text", "Myriad Set Pro", "SF Pro Icons", "Apple Legacy Chevron", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    --font-family-jd: "Microsoft YaHei,Heiti SC,tahoma,arial,Hiragino Sans GB," \5B8B\4F53",sans-serif"
+}
+
+html,
+body,
+.markdown-body {
+    font-family: var(--font-family-apple);
+}
+
+.gt-container .gt-svg {
+    vertical-align: baseline !important;
+}
+
+.markdown-body code:not([class*="hljs"]) {
+    color: var(--color-orange);
+}
+
+.index-img>a {
+    display: block;
+    overflow: hidden;
+    box-shadow: 0 5px 11px 0 rgba(0, 0, 0, 0.18), 0 4px 15px 0 rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+}
+
+.index-img>a>img {
+    transition: all .45s ease-in-out;
+}
+
+.index-img>a>img:hover {
+    transform: scale(1.1);
+}
+
+.title {
+    font-size: .95rem;
+    font-weight: bold;
+    line-height: 2rem;
+    margin-bottom: 5px !important;
+}
+
+.title-info {
+    color: var(--color-info);
+}
+
+.title-success {
+    color: var(--color-success);
+}
+
+.title-warning {
+    color: var(--color-warn);
+}
+
+.title-danger {
+    color: var(--color-danger);
+}
+
+.inline{
+    display: inline-block;
+}

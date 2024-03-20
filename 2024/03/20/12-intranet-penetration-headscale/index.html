@@ -1,0 +1,807 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/logo.png">
+  <link rel="icon" href="/images/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="KingChen">
+  <meta name="keywords" content="Coding Reading Gaming">
+  
+    <meta name="description" content="HeadScale 服务端搭建 HeadScale 是一个开源的 TailScale 服务端实现，可以实现多平台的内网穿透。  准备工作docker-compose.yaml 文件如下： 12345678910111213141516171819version: &amp;#x27;3.9&amp;#x27;services:  headscale:    # 镜像版本    image: headscale&#x2F;h">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过 HeadScale(TailScale开源服务端) 多平台实现内网穿透">
+<meta property="og:url" content="https://toflying.com/2024/03/20/12-intranet-penetration-headscale/index.html">
+<meta property="og:site_name" content="ToFlying">
+<meta property="og:description" content="HeadScale 服务端搭建 HeadScale 是一个开源的 TailScale 服务端实现，可以实现多平台的内网穿透。  准备工作docker-compose.yaml 文件如下： 12345678910111213141516171819version: &amp;#x27;3.9&amp;#x27;services:  headscale:    # 镜像版本    image: headscale&#x2F;h">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image.origin-tec.com/origin/2024/03/20/65fa9faf930c9.jpg">
+<meta property="article:published_time" content="2024-03-20T07:23:38.000Z">
+<meta property="article:modified_time" content="2024-03-20T07:24:00.000Z">
+<meta property="article:author" content="KingChen">
+<meta property="article:tag" content="内网穿透">
+<meta property="article:tag" content="headscale">
+<meta property="article:tag" content="tailscale">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://image.origin-tec.com/origin/2024/03/20/65fa9faf930c9.jpg">
+  
+  
+  
+  <title>通过 HeadScale(TailScale开源服务端) 多平台实现内网穿透 - ToFlying</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+  
+<link rel="stylesheet" href="/styles/custom.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"toflying.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":["home","post"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":false,"baidu":"163ac7ffdba07f123f259b59185bb87c","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"IoGMmKPIPfqshYURpHnX8kwe-gzGzoHsz","app_key":"CGbs7Jd3uNkg5DUNMFFxbLH7","server_url":"https://iogmmkpi.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?163ac7ffdba07f123f259b59185bb87c";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 50vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>ToFlying</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://cdn.abeautify.top/images/common/banner.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="通过 HeadScale(TailScale开源服务端) 多平台实现内网穿透"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-03-20 15:23" pubdate>
+          2024年3月20日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">通过 HeadScale(TailScale开源服务端) 多平台实现内网穿透</h1>
+            
+              <p class="note note-info">
+                
+                  
+                    本文最后更新于：2024年3月20日 下午
+                  
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="HeadScale-服务端搭建"><a href="#HeadScale-服务端搭建" class="headerlink" title="HeadScale 服务端搭建"></a>HeadScale 服务端搭建</h1><blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/juanfont/headscale">HeadScale</a> 是一个开源的 TailScale 服务端实现，可以实现多平台的内网穿透。</p>
+</blockquote>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p><code>docker-compose.yaml</code> 文件如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">version:</span> <span class="hljs-string">&#x27;3.9&#x27;</span><br><span class="hljs-attr">services:</span><br>  <span class="hljs-attr">headscale:</span><br>    <span class="hljs-comment"># 镜像版本</span><br>    <span class="hljs-attr">image:</span> <span class="hljs-string">headscale/headscale:0.23.0-alpha5</span><br>    <span class="hljs-comment"># 容器名称</span><br>    <span class="hljs-attr">container_name:</span> <span class="hljs-string">headscale</span><br>    <span class="hljs-comment"># 挂载目录根据自己的需求进行修改（宿主机目录:容器目录）</span><br>    <span class="hljs-comment"># 其中 /headscale/config 为配置文件目录，/headscale/data 为数据目录，/headscale/run 为运行目录</span><br>    <span class="hljs-attr">volumes:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">/headscale/config:/etc/headscale</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">/headscale/data:/var/lib/headscale</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">/headscale/run:/var/run/headscale</span><br>    <span class="hljs-comment"># 端口号根据自己的需求进行修改（宿主机端口:容器端口）</span><br>    <span class="hljs-attr">ports:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-number">8080</span><span class="hljs-string">:8080</span><br>    <span class="hljs-comment"># 此处最新版的命令行必须使用 server 命令，之前版本为 headscale serve</span><br>    <span class="hljs-attr">command:</span> <span class="hljs-string">serve</span><br>    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span><br></code></pre></td></tr></table></figure>
+
+<p>创建目录及配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 创建宿主机挂载目录</span><br><span class="hljs-built_in">mkdir</span> -p /headscale/config<br><span class="hljs-built_in">mkdir</span> -p /headscale/data<br><span class="hljs-built_in">mkdir</span> -p /headscale/run<br><span class="hljs-built_in">cd</span> /headscale<br><br><span class="hljs-comment"># 创建配置文件（通过wget）</span><br>wget -O ./config/config.yaml https://raw.githubusercontent.com/juanfont/headscale/main/config-example.yaml<br><span class="hljs-comment"># 或者通过curl</span><br>curl https://raw.githubusercontent.com/juanfont/headscale/main/config-example.yaml -o ./config/config.yaml<br></code></pre></td></tr></table></figure>
+
+<p>修改配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># config.yaml(此处就讲几个关键配置，其他基本不用修改)</span><br><span class="hljs-comment"># 修改 server_url 为你的域名</span><br><span class="hljs-attr">server_url:</span> <span class="hljs-string">https://proxy.your-domain.com/</span><br><br><span class="hljs-comment"># 监听地址（如果上边容器端口被修改此处也要修改）</span><br><span class="hljs-attr">listen_addr:</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span><span class="hljs-string">:8080</span><br><br><span class="hljs-comment"># 当 magic_dns 为 true 时，HeadScale 会自动为你的设备分配一个域名(也就是下边的base_domain，可以在内网环境访问，而不需要通过IP)</span><br><span class="hljs-attr">magic_dns:</span> <span class="hljs-literal">true</span><br><span class="hljs-attr">base_domain:</span> <span class="hljs-string">base_domain.com</span><br><br><span class="hljs-comment"># 随机化客户端端口</span><br><span class="hljs-attr">randomize_client_port:</span> <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure>
+
+<p>启动 Docker 容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 在 docker-compose.yaml 所在目录下启动服务</span><br>docker-compose up -d<br></code></pre></td></tr></table></figure>
+
+<h2 id="WEB-UI管理工具"><a href="#WEB-UI管理工具" class="headerlink" title="WEB-UI管理工具"></a>WEB-UI管理工具</h2><blockquote>
+<p>这类服务端一般都有一个 WEB-UI 管理工具，HeadScale 也不例外。</p>
+<p>此处用 <a target="_blank" rel="noopener" href="https://github.com/GoodiesHQ/headscale-admin">headscale-admin</a> 做演示，其他的管理工具也是类似的。</p>
+</blockquote>
+<p>使用 Docker 运行容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 宿主机端口随意</span><br>docker run -p 8000:80 goodieshq/headscale-admin:latest<br></code></pre></td></tr></table></figure>
+
+<h2 id="反向代理配置"><a href="#反向代理配置" class="headerlink" title="反向代理配置"></a>反向代理配置</h2><p>在 Nginx 中配置反向代理，将 HeadScale 服务端的 8080 端口映射到 443 端口。想偷懒就直接通过面板管理工具添加一个反向代理。配置完毕记得重载 Nginx。其他WEB服务器也是类似的。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-section">server</span> &#123;<br>    <span class="hljs-attribute">listen</span> <span class="hljs-number">443</span> ssl http2;<br>    <span class="hljs-comment"># 你的域名（自行修改）</span><br>    <span class="hljs-attribute">server_name</span> proxy.your-domain.com;<br><br>    <span class="hljs-comment"># 证书路径（自行修改）</span><br>    <span class="hljs-attribute">ssl_certificate</span> /etc/letsencrypt/live/your-domain.com/fullchain.pem;<br>    <span class="hljs-attribute">ssl_certificate_key</span> /etc/letsencrypt/live/your-domain.com/privkey.pem;<br><br>    <span class="hljs-section">location</span> / &#123;<br>        <span class="hljs-comment"># 代理地址，如果上边映射的宿主机端口被修改此处也要修改</span><br>        <span class="hljs-attribute">proxy_pass</span> http://127.0.0.1:8080;<br>        <span class="hljs-attribute">proxy_set_header</span> Host <span class="hljs-variable">$host</span>;<br>        <span class="hljs-attribute">proxy_set_header</span> X-Real-IP <span class="hljs-variable">$remote_addr</span>;<br>        <span class="hljs-attribute">proxy_set_header</span> X-Forwarded-For <span class="hljs-variable">$proxy_add_x_forwarded_for</span>;<br>        <span class="hljs-attribute">proxy_set_header</span> X-Forwarded-Proto <span class="hljs-variable">$scheme</span>;<br>    &#125;<br><br>    <span class="hljs-comment"># WEB-UI 管理工具, 访问地址为 https://proxy.your-domain.com/admin</span><br>    <span class="hljs-section">location</span> /admin &#123;<br>        <span class="hljs-comment"># 代理地址，如果上边映射的宿主机端口被修改此处也要修改</span><br>        <span class="hljs-attribute">proxy_pass</span> http://127.0.0.1:8000;<br>        <span class="hljs-attribute">proxy_set_header</span> Host <span class="hljs-variable">$host</span>;<br>        <span class="hljs-attribute">proxy_set_header</span> X-Real-IP <span class="hljs-variable">$remote_addr</span>;<br>        <span class="hljs-attribute">proxy_set_header</span> X-Forwarded-For <span class="hljs-variable">$proxy_add_x_forwarded_for</span>;<br>        <span class="hljs-attribute">proxy_set_header</span> X-Forwarded-Proto <span class="hljs-variable">$scheme</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<blockquote>
+<p>不出意外的话，HeadScale 服务端就搭建完成了。出意外就在下边留言吧。😊</p>
+<p>现在就可以通过 <code>https://proxy.your-domain.com/admin</code> 访问 HeadScale 的 WEB-UI 页面了。</p>
+<p>PS: 直接访问 <code>https://proxy.your-domain.com</code> 没效果。</p>
+</blockquote>
+<h2 id="WEB-UI-配置"><a href="#WEB-UI-配置" class="headerlink" title="WEB-UI 配置"></a>WEB-UI 配置</h2><p>首先，生成一个新的 API 密钥，然后将其添加到页面中。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 在 HeadScale 服务端所在的宿主机上执行。执行完毕后会生成一个 API 密钥。</span><br>docker <span class="hljs-built_in">exec</span> -it headscale headscale apikeys create<br></code></pre></td></tr></table></figure>
+
+<p>然后点击页面的保存按钮，出现左侧的菜单就算成功了。</p>
+<p><img src="https://image.origin-tec.com/origin/2024/03/20/65fa99353a468.jpg" srcset="/img/loading.gif" lazyload alt="HeadScale-Admin"></p>
+<h1 id="TailScale-客户端配置"><a href="#TailScale-客户端配置" class="headerlink" title="TailScale 客户端配置"></a>TailScale 客户端配置</h1><blockquote>
+<p>下载并安装 <a target="_blank" rel="noopener" href="https://tailscale.com/download">TailScale</a> 客户端。</p>
+</blockquote>
+<p>在 WEB-UI 这里添加用户，然后生成一个临时的key，后边要用到。</p>
+<p><img src="https://image.origin-tec.com/origin/2024/03/20/65fa9ab874689.jpg" srcset="/img/loading.gif" lazyload alt="添加用户"></p>
+<p><img src="https://image.origin-tec.com/origin/2024/03/20/65fa9b92abd4c.jpg" srcset="/img/loading.gif" lazyload alt="生成PreAuthKey"></p>
+<p>然后根据你当前设备平台，选择安装不同的客户端。<strong>要修改 URL 为你的 HeadScale 服务端域名。</strong></p>
+<h2 id="Linux-客户端部署"><a href="#Linux-客户端部署" class="headerlink" title="Linux 客户端部署"></a>Linux 客户端部署</h2><p>此处以 CentOS 为例（参考官方文档）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 已经是 root 用户就不用输入 sudo 了。</span><br>sudo dnf config-manager --add-repo https://pkgs.tailscale.com/stable/centos/8/tailscale.repo<br>sudo dnf install tailscale<br><br>sudo systemctl <span class="hljs-built_in">enable</span> --now tailscaled<br></code></pre></td></tr></table></figure>
+
+<p>主要是后续步骤不同，这里打开 WEB-UI 页面，选择 Deploy，复制生成的命令行：</p>
+<p><img src="https://image.origin-tec.com/origin/2024/03/20/65fa9d456ebe5.jpg" srcset="/img/loading.gif" lazyload alt="deploy"></p>
+<blockquote>
+<p>如果只需要通过内网IP进行访问，就不需要勾选 –accept-dns 了。</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 在你的设备上执行（此处仅作为参考，根据实际情况修改）</span><br>tailscale up --login-server=https://proxy.your-domain.com --reset --authkey=xxx --accept-dns --accept-routes<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 查看状态</span><br>tailscale status<br></code></pre></td></tr></table></figure>
+
+<p>然后现在客户端就部署成功了，可以通过内网IP进行访问了。其他平台的部署参考官方文档，也是类似的。<br>例如：<a target="_blank" rel="noopener" href="https://github.com/juanfont/headscale/blob/main/docs/android-client.md">Android</a>、<a target="_blank" rel="noopener" href="https://github.com/juanfont/headscale/blob/main/docs/iOS-client.md">iOS</a>、<a target="_blank" rel="noopener" href="https://github.com/juanfont/headscale/blob/main/docs/windows-client.md">Windows</a> 等。</p>
+<p>客户端提供很多功能，例如可以通过内网传输文件、远程桌面、远程调试等，另外还可以通过公网服务器反向代理访问内网服务器，用于数据处理等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 部署了多台设备之后，可以通过Ping测试一下(此处修改为你需要PING的设备内网IP)</span><br>tailscale ping xxx.xxx.xxx.xxx<br></code></pre></td></tr></table></figure>
+
+<p>当然，如果你可能发现访问速度可能会有点慢，可以通过配置 Derp 中继服务器来解决，可以快速打洞，如果不成功也能进行兜底。</p>
+<h1 id="Derp-服务端部署"><a href="#Derp-服务端部署" class="headerlink" title="Derp 服务端部署"></a>Derp 服务端部署</h1><p>可参考 <a target="_blank" rel="noopener" href="https://github.com/fredliang44/derper-docker">derper-docker</a>，docker-compose.yaml 文件如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">version:</span> <span class="hljs-string">&#x27;3.5&#x27;</span><br><span class="hljs-attr">services:</span><br>  <span class="hljs-attr">derper:</span><br>    <span class="hljs-attr">container_name:</span> <span class="hljs-string">derper</span><br>    <span class="hljs-attr">image:</span> <span class="hljs-string">fredliang/derper</span><br>    <span class="hljs-attr">restart:</span> <span class="hljs-string">always</span><br>    <span class="hljs-attr">volumes:</span><br>      <span class="hljs-comment"># 此处修改为你的证书目录（例如letsencrypt的证书，目录需要包含fullchain.pem、privkey.pem 等文件）</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">./cert:/cert</span><br>      <span class="hljs-comment"># handscale.sock</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;headscale/run/handscale.sock:/var/run/tailscale/tailscaled.sock:ro&#x27;</span><br>    <span class="hljs-attr">ports:</span><br>      <span class="hljs-comment"># 记得防火墙开放端口（云服务器同样）</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-number">3478</span><span class="hljs-string">:3478/udp</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-number">23479</span><span class="hljs-string">:23479</span><br>    <span class="hljs-attr">environment:</span><br>      <span class="hljs-comment"># 此处修改为你的域名</span><br>      <span class="hljs-attr">DERP_DOMAIN:</span> <span class="hljs-string">derp.your-domain.com</span><br>      <span class="hljs-comment"># 端口号根据自己的需求进行修改</span><br>      <span class="hljs-attr">DERP_ADDR:</span> <span class="hljs-string">&#x27;:23479&#x27;</span><br>      <span class="hljs-comment"># 此处修改为你的证书目录</span><br>      <span class="hljs-attr">DERP_CERT_DIR:</span> <span class="hljs-string">/cert</span><br>      <span class="hljs-comment"># 证书模式（这里请参考上边的 derper-docker）</span><br>      <span class="hljs-attr">DERP_CERT_MODE:</span> <span class="hljs-string">&#x27;letsencrypt&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<p>运行 Docker 容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 在 docker-compose.yaml 所在目录下启动服务</span><br>docker-compose up -d<br></code></pre></td></tr></table></figure>
+
+<p>然后设置反向代理，例如把你的 <code>derp.your-domain.com</code> 代理到 <code>127.0.0.1:23479</code>，https协议，此处不再赘述。</p>
+<p>此时访问你的 <code>https://derp.your-domain.com</code> 页面会显示相关信息，说明部署成功了。</p>
+<p>配置完毕后在 <code>config.yaml</code> 所在目录 <code>/headscale/config</code> 下添加 <code>derp.yaml</code> 文件，并修改：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># derp.yaml</span><br><span class="hljs-comment"># If you plan to somehow use headscale, please deploy your own DERP infra: https://tailscale.com/kb/1118/custom-derp-servers/</span><br><span class="hljs-attr">regions:</span><br>  <span class="hljs-attr">900:</span><br>    <span class="hljs-attr">regionid:</span> <span class="hljs-number">900</span><br>    <span class="hljs-attr">regioncode:</span> <span class="hljs-string">地域代码</span><br>    <span class="hljs-attr">regionname:</span> <span class="hljs-string">地域名称</span><br>    <span class="hljs-attr">nodes:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">900a</span><br>        <span class="hljs-attr">regionid:</span> <span class="hljs-number">900</span><br>        <span class="hljs-attr">hostname:</span> <span class="hljs-string">derp.your-domain.com</span><br>        <span class="hljs-attr">ipv4:</span> <span class="hljs-string">你的公网IP</span><br>        <span class="hljs-attr">stunport:</span> <span class="hljs-number">3478</span><br>        <span class="hljs-attr">stunonly:</span> <span class="hljs-literal">false</span><br>        <span class="hljs-attr">derpport:</span> <span class="hljs-number">443</span><br></code></pre></td></tr></table></figure>
+
+<p>修改 HeadScale 服务端的配置文件，添加 Derp 配置路径：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># config.yaml</span><br><span class="hljs-attr">derp:</span> <br> <span class="hljs-comment"># 将默认的 DERP 服务器注释掉</span><br> <span class="hljs-attr">urls:</span><br>    <span class="hljs-comment"># - https://controlplane.tailscale.com/derpmap/default</span><br> <span class="hljs-comment"># 自定义 DERP 服务器路径</span><br> <span class="hljs-attr">paths:</span> <br>    <span class="hljs-bullet">-</span> <span class="hljs-string">/etc/headscale/derp.yaml</span><br></code></pre></td></tr></table></figure>
+
+<p>配置完毕后通过 <code>docker restart</code> 重启 HeadScale 服务端。再然后在客户端重新运行 tailscale 。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">tailscale down<br>tailscale up <br></code></pre></td></tr></table></figure>
+
+<p>网络检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">tailscale netcheck<br></code></pre></td></tr></table></figure>
+
+<p>如果展示如下信息，说明配置成功了。</p>
+<p><img src="https://image.origin-tec.com/origin/2024/03/20/65faa8911f9cf.jpg" srcset="/img/loading.gif" lazyload alt="derp"></p>
+<p>现在，内网穿透就配置完成了，可以通过公网IP访问内网服务器了，速度也会提升巨大。</p>
+<p><strong>Enjoy it! 🎉</strong></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><section class="footnotes"><div class="footnote-list"><ol><li><span id="fn:1" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://github.com/juanfont/headscale">HeadScale Git</a>
+<a href="#fnref:1" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:2" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://github.com/GoodiesHQ/headscale-admin">headscale-admin Git</a>
+<a href="#fnref:2" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:3" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://tailscale.com/">TailScale Website</a>
+<a href="#fnref:3" rev="footnote" class="footnote-backref"> ↩</a></span></span></li><li><span id="fn:4" class="footnote-text"><span><a target="_blank" rel="noopener" href="https://github.com/fredliang44/derper-docker">Derper-Docker</a>
+<a href="#fnref:4" rev="footnote" class="footnote-backref"> ↩</a></span></span></li></ol></div></section>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%9D%82%E8%B0%88/" class="category-chain-item">技术杂谈</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/">#内网穿透</a>
+      
+        <a href="/tags/headscale/">#headscale</a>
+      
+        <a href="/tags/tailscale/">#tailscale</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>通过 HeadScale(TailScale开源服务端) 多平台实现内网穿透</div>
+      <div>https://toflying.com/2024/03/20/12-intranet-penetration-headscale/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>KingChen</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年3月20日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2024年3月20日</div>
+        </div>
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/09/16/11-hi-miniprogram/" title="Hi工大Pro项目前端技术细节解析">
+                        <span class="hidden-mobile">Hi工大Pro项目前端技术细节解析</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#gitalk-container', function() {
+      Fluid.utils.createCssLink('/css/gitalk.css')
+      Fluid.utils.createScript('https://cdn.abeautify.top/js/gitalk/gitalk.min.js', function() {
+        var options = Object.assign(
+          {"clientID":"60e0fe4593856338beda","clientSecret":"d79ddc12ba7ac9065151f303f1950d0cc75367b8","repo":"KingCheni.github.io","owner":"KingCheni","admin":["KingCheni"],"language":"zh-CN","labels":["Gitalk"],"perPage":10,"pagerDirection":"last","distractionFreeMode":false,"createIssueManually":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","upload":{"enable":true,"url":"https://pic.abeautify.top/upload.php","method":"POST","name":"file","headers":{"Content-Type":"multipart/form-data"},"responseType":"json","timeout":100000,"fileMaxSize":10485760,"successCode":1,"successCodeKey":["code"],"errorMsgKey":["state"],"successUrlKey":["url"],"proxy":null}},
+          {
+            id: 'f0a8b802f6415ad77beb22bc18ceb3e7'
+          }
+        )
+        var gitalk = new Gitalk(options);
+        gitalk.render('gitalk-container');
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       Powered by <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> & <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
